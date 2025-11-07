@@ -1,0 +1,63 @@
+:root { --bg:#0b0f1a; --panel:#121826; --panel-2:#0e1526; --text:#e8eefc; --muted:#a9b6d8; --border:#1d2742; --accent:#4f8cff; --accent-2:#7aa2ff; }
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{ margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--text); background:linear-gradient(180deg,#0b0f1a 0%,#0a1020 100%); }
+
+/* Layout */
+.container{ max-width:1040px; margin:0 auto; padding:24px; }
+.header{ display:flex; align-items:center; justify-content:space-between; padding:16px 0; }
+.brand{ font-weight:700; letter-spacing:.3px; }
+.badge{ padding:6px 10px; border:1px solid var(--border); border-radius:999px; color:#c8d7ff; background:var(--panel-2); font-size:12px; }
+
+/* Card */
+.card{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px; box-shadow:0 8px 24px rgba(0,0,0,.35); }
+.title{ margin:0 0 8px 0; }
+.sub{ color:var(--muted); font-size:14px; }
+
+/* Forms */
+.form{ display:flex; flex-direction:column; gap:12px; }
+.input{ width:100%; padding:14px 14px; border-radius:10px; border:1px solid var(--border); background:#0c1426; color:var(--text); outline:none; }
+.input:focus{ border-color:#2d4f8f; box-shadow:0 0 0 3px rgba(79,140,255,.18); }
+.btn{ padding:12px 16px; background:linear-gradient(180deg,var(--accent-2) 0%, var(--accent) 100%); color:#fff; border:none; border-radius:10px; font-weight:700; cursor:pointer; box-shadow:0 10px 22px rgba(79,140,255,.35); }
+.link{ color:#9db7ff; text-decoration:none; font-size:13px; }
+
+/* Chat */
+.shell{ display:grid; grid-template-columns: 280px 1fr; gap:16px; min-height: calc(100vh - 120px); }
+.sidebar{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:12px; }
+.sidebar h4{ margin:0; color:#cfe; }
+.list{ display:flex; flex-direction:column; gap:8px; overflow:auto; }
+.item{ padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:#0d1730; color:#dbe6ff; cursor:pointer; }
+.item.active{ border-color:var(--accent); background:#0f1d40; }
+.main{ background:var(--panel); border:1px solid var(--border); border-radius:14px; display:grid; grid-template-rows: auto 1fr auto; }
+.hero{ text-align:center; padding:22px 16px; border-bottom:1px solid var(--border); }
+.messages{ padding:18px; overflow:auto; display:flex; flex-direction:column; gap:10px; }
+.msg{ padding:10px 12px; border-radius:12px; max-width:75%; line-height:1.5; }
+.msg.user{ background:#17284b; border:1px solid #21386a; margin-left:auto; }
+.msg.bot{ background:#0c1730; border:1px solid #1a2b56; }
+.composer{ display:flex; gap:10px; padding:12px; border-top:1px solid var(--border); }
+.composer .input{ background:#0a1428; }
+
+/* Overlay */
+.overlay{ position:fixed; right:22px; bottom:84px; width:360px; background:rgba(12,18,35,.98); border:1px solid var(--border); border-radius:12px; padding:12px; box-shadow:0 16px 36px rgba(0,0,0,.45); }
+.overlay h5{ margin:0 0 6px 0; color:#c8d7ff; }
+.overlay .content{ max-height:240px; overflow:auto; font-size:13px; color:#dfe7ff; }
+.toggle{ position:fixed; right:22px; bottom:22px; width:44px; height:44px; border-radius:10px; border:1px solid var(--border); background:#0a1428; color:#cde; display:flex; align-items:center; justify-content:center; }
+
+/* Utility */
+.center{ display:flex; align-items:center; justify-content:center; }
+.grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+
+.shell.collapsed{ grid-template-columns: 0 1fr; }
+.shell.collapsed .sidebar{ display:none; }
+.mic{ width:44px; height:44px; border-radius:10px; border:1px solid var(--border); background:#0a1428; color:#cde; display:flex; align-items:center; justify-content:center; }
+.mic.recording{ background:#b04141; border-color:#ff6b6b; box-shadow:0 0 0 3px rgba(255,107,107,.2); color:#fff; }
+
+.controls{ display:flex; gap:8px; margin-top:8px; }
+.controls .mini{ padding:6px 10px; border-radius:8px; border:1px solid var(--border); background:#0a1428; color:#dbe6ff; cursor:pointer; font-size:12px; }
+.controls .mini:hover{ background:#0f1d40; }
+
+.mode-btn { background: #1d2640; border: none; color: #b6cff9; border-radius: 8px; font-weight:600; box-shadow:none; }
+.mode-btn.active { background: var(--accent); color: #fff; }
+.mode-btn:focus{ outline:2px solid var(--accent); }
+
+@media (max-width: 960px){ .shell{ grid-template-columns: 1fr; } }

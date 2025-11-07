@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Register • MedAssist</title>
+	<link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+	<div class="container" style="min-height:100vh; display:grid; place-items:center;">
+		<div class="card" style="width:460px; max-width:100%;">
+			<h2 class="title">Create your account</h2>
+			<p class="sub">Register to start using your medical assistant</p>
+			<div class="form" style="margin-top:12px;">
+				<input id="email" class="input" placeholder="Email" />
+				<input id="password" class="input" type="password" placeholder="Password" />
+				<button id="register" class="btn">Register</button>
+				<a class="link" href="/login">Have an account? Sign in</a>
+			</div>
+		</div>
+	</div>
+	<script>
+	async function api(path, method='GET', body){
+		const r = await fetch(path,{method,headers:{'Content-Type':'application/json'},body: body?JSON.stringify(body):undefined});
+		return r.json();
+	}
+	document.getElementById('register').onclick = async()=>{
+		const email = document.getElementById('email').value.trim();
+		const password = document.getElementById('password').value;
+		const res = await api('/api/auth/register','POST',{email,password});
+		if(res.error){ alert(res.error); return; }
+		const login = await api('/api/auth/login','POST',{email,password});
+		if(login.access_token){ localStorage.setItem('medassist_token',login.access_token); localStorage.setItem('medassist_user',JSON.stringify(login.user)); location.href='/home'; }
+		else location.href='/login';
+	};
+	</script>
+</body>
+</html>

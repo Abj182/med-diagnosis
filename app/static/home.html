@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Home • MedAssist</title>
+	<link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+	<div class="container">
+		<div class="header">
+			<div class="brand">MedAssist</div>
+			<div><span class="badge">Secure</span></div>
+		</div>
+		<div class="shell" id="shell">
+			<aside class="sidebar">
+				<h4>History</h4>
+				<button id="newChat" class="btn" style="padding:10px 12px;">New chat</button>
+				<div id="recents" class="list"></div>
+				<button id="clearChats" class="btn" style="background:#39425f;border:none;">Clear chats</button>
+				<button id="logout" class="btn" style="background:#e75c5c;border:none;">Logout</button>
+			</aside>
+			<section class="main">
+				<div class="hero">
+					<h2 class="title">Welcome to your Medical Assistant</h2>
+					<p class="sub">Ask medical questions grounded in your knowledge base or online trusted sources.</p>
+				</div>
+				<div class="center" style="margin-bottom:18px;">
+					<button id="mode-textbook" class="btn mode-btn active" style="padding:8px 14px; margin-right:6px;">Textbook</button>
+					<button id="mode-online" class="btn mode-btn" style="padding:8px 14px;">Online</button>
+				</div>
+				<div id="messages" class="messages"></div>
+				<div class="composer">
+					<button id="voice" class="mic" title="Voice input">🎤</button>
+					<input id="query" class="input" placeholder="Type your question..." />
+					<button id="send" class="btn">Send</button>
+				</div>
+			</section>
+		</div>
+	</div>
+	<div id="overlay" class="overlay" hidden>
+		<h5>Context used</h5>
+		<div id="overlay-content" class="content"></div>
+	</div>
+	<button id="overlayToggle" class="toggle">⧉</button>
+	<script src="/static/home.js"></script>
+</body>
+</html>
