@@ -14,27 +14,50 @@
 		</div>
 		<div class="shell" id="shell">
 			<aside class="sidebar">
-				<h4>History</h4>
-				<button id="newChat" class="btn" style="padding:10px 12px;">New chat</button>
-				<div id="recents" class="list"></div>
-				<button id="clearChats" class="btn" style="background:#39425f;border:none;">Clear chats</button>
-				<button id="logout" class="btn" style="background:#e75c5c;border:none;">Logout</button>
+					<div class="sidebar-header">
+						<div class="sidebar-title">History</div>
+						<button id="sidebarToggle" class="sidebar-menu" aria-label="Toggle sidebar">☰</button>
+					</div>
+					<button id="newChat" class="btn sidebar-primary"><span>✨</span> New Chat</button>
+					<div class="sidebar-filters">
+						<button class="filter-btn active" data-filter="all">All Chats</button>
+						<button class="filter-btn" data-filter="textbook">Textbook</button>
+						<button class="filter-btn" data-filter="online">Online</button>
+					</div>
+					<div id="recents" class="list"></div>
+					<div class="sidebar-footer">
+						<button id="clearChats" class="btn sidebar-danger">⚠ Clear Chats</button>
+						<button id="themeToggle" class="btn sidebar-muted">🌙 Light Mode</button>
+						<button id="logout" class="btn sidebar-muted">🚪 Logout</button>
+					</div>
 			</aside>
 			<section class="main">
-				<div class="hero">
-					<h2 class="title">Welcome to your Medical Assistant</h2>
-					<p class="sub">Ask medical questions grounded in your knowledge base or online trusted sources.</p>
-				</div>
-				<div class="center" style="margin-bottom:18px;">
-					<button id="mode-textbook" class="btn mode-btn active" style="padding:8px 14px; margin-right:6px;">Textbook</button>
-					<button id="mode-online" class="btn mode-btn" style="padding:8px 14px;">Online</button>
-				</div>
-				<div id="messages" class="messages"></div>
-				<div class="composer">
-					<button id="voice" class="mic" title="Voice input">🎤</button>
-					<input id="query" class="input" placeholder="Type your question..." />
-					<button id="send" class="btn">Send</button>
-				</div>
+					<header class="main-header">
+						<div class="main-title">Medical Diagnosis Chatbot</div>
+						<div class="mode-toggle">
+							<button id="mode-textbook" class="mode-btn active">Textbook</button>
+							<button id="mode-online" class="mode-btn">Online</button>
+						</div>
+					</header>
+					<div class="main-body">
+						<div id="main-empty" class="welcome-panel">
+							<div class="welcome-icon">🏥</div>
+							<h2>Welcome to Medical Assistant</h2>
+							<p>I can help you understand symptoms and provide information from medical textbooks.</p>
+							<div class="suggestions">
+							<button class="suggestion" data-query="I have a fever and headache">🤒 I have a fever and headache</button>
+							<button class="suggestion" data-query="Symptoms of diabetes">🩺 Symptoms of diabetes</button>
+							<button class="suggestion" data-query="Treating common cold">💊 Treating common cold</button>
+							</div>
+						</div>
+						<div id="messages" class="messages"></div>
+					</div>
+					<div class="composer">
+						<button id="voice" class="mic" title="Voice input">🎤</button>
+						<input id="query" class="input" placeholder="Ask me anything about health..." />
+						<button id="send" class="btn composer-send">Send</button>
+					</div>
+					<footer class="main-footer">Medical information is for educational purposes only. Always consult a healthcare professional.</footer>
 			</section>
 		</div>
 	</div>

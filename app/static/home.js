@@ -13,14 +13,61 @@ const overlayContent = document.getElementById('overlay-content');
 const overlayToggle = document.getElementById('overlayToggle');
 const modeTextbookBtn = document.getElementById('mode-textbook');
 const modeOnlineBtn = document.getElementById('mode-online');
+const filterButtons = document.querySelectorAll('.filter-btn');
+const suggestions = document.querySelectorAll('.suggestion');
+const themeToggle = document.getElementById('themeToggle');
 
 let chatList = []; let currentChatId = null;
 let mode = localStorage.getItem('ui_chat_mode') || 'textbook';
+let sidebarFilter = 'all';
+const storedTheme = localStorage.getItem('ui_theme') || 'dark';
+const DISCLAIMER_TEXT = 'Disclaimer: This information is for educational purposes only and is not a substitute for professional medical advice. Always consult a qualified healthcare provider for personalised guidance.';
+
+function applyTheme(theme){
+	const isLight = theme === 'light';
+	document.body.classList.toggle('light-theme', isLight);
+	if(themeToggle){ themeToggle.textContent = isLight ? '🌑 Dark Mode' : '🌙 Light Mode'; }
+	localStorage.setItem('ui_theme', theme);
+}
+
+applyTheme(storedTheme);
+
+if(themeToggle){
+	themeToggle.addEventListener('click',()=>{
+		const nextTheme = document.body.classList.contains('light-theme') ? 'dark' : 'light';
+		applyTheme(nextTheme);
+	});
+}
+
+function updateSidebarFilterButtons(){ filterButtons.forEach(btn=> btn.classList.toggle('active', btn.dataset.filter===sidebarFilter)); }
+
+function setSidebarFilter(f){
+	sidebarFilter = f;
+	updateSidebarFilterButtons();
+	renderList();
+}
+
+filterButtons.forEach(btn=>{
+	btn.addEventListener('click',()=>{
+		const target = btn.dataset.filter;
+		if(target==='textbook' || target==='online'){
+			setMode(target);
+			setSidebarFilter(target);
+		}else if(target==='all'){
+			setSidebarFilter('all');
+		}
+	});
+});
+if(filterButtons.length){ updateSidebarFilterButtons(); }
 
 function setMode(m){
 	mode=m; localStorage.setItem('ui_chat_mode', m);
 	modeTextbookBtn.classList.toggle('active',m==='textbook');
 	modeOnlineBtn.classList.toggle('active',m==='online');
+	if(sidebarFilter!=='all'){
+		sidebarFilter = m;
+		updateSidebarFilterButtons();
+	}
 	currentChatId = null;
 	messages.innerHTML = '';
 	query.value = '';
@@ -90,9 +137,24 @@ function stopSpeak(){ try{ window.speechSynthesis.cancel(); }catch(_){ } }
 
 function renderList(){
 	recents.innerHTML='';
-	const filtered = chatList.filter(c=>c.tag===(mode==='online'?'online':'textbook'));
+	let filtered = chatList;
+	if(sidebarFilter==='textbook' || sidebarFilter==='online'){
+		filtered = chatList.filter(c=>c.tag===sidebarFilter);
+	}else if(sidebarFilter!=='all'){
+		filtered = chatList.filter(c=>c.tag===(mode==='online'?'online':'textbook'));
+	}
 	if(!filtered.length){ const d=document.createElement('div'); d.className='item'; d.textContent='No chats yet'; d.style.opacity=.7; recents.appendChild(d); return; }
 	for(const c of filtered){ const it=document.createElement('div'); it.className='item'; it.dataset.id=c.id; it.textContent=c.title||'Untitled'; if(c.id===currentChatId) it.classList.add('active'); it.onclick=()=>openChat(c.id); recents.appendChild(it); }
+}
+
+function formatSourceForAnswer(src){
+	if(!src) return null;
+	try{
+		const url = new URL(src);
+		return `- ${url.hostname}: ${url.href}`;
+	}catch(_){
+		return `- ${src}`;
+	}
 }
 
 async function loadChats(){ const res = await api('/api/chats/list'); chatList = res.chats||[]; renderList(); }
@@ -111,11 +173,30 @@ async function sendQuery(){
 		else{ rag = await api('/api/online','POST',{query:q}); }
 		// Replace last bot text
 		const lastBot = messages.querySelectorAll('.msg.bot');
-		if(lastBot.length){ lastBot[lastBot.length-1].textContent = rag.answer || 'No answer.'; }
-		await api('/api/chats/append','POST',{id:currentChatId,role:'bot',text: rag.answer || 'No answer.',tag:mode==='online'?'online':'textbook'});
-		if(rag.matches && rag.matches.length){ overlayContent.innerHTML = rag.matches.map(m=>`<div style='margin-bottom:8px'><div style='color:#9bb0d3;font-size:12px'>${m.source}</div><div>${m.text}</div></div>`).join(''); overlay.hidden=false; }
+		if(lastBot.length){
+			const matches = Array.isArray(rag.matches) ? rag.matches : [];
+			let finalAnswer = (rag.answer || 'No answer.').trim();
+			if(mode==='online'){
+				const sourceLines = matches.map(m=>formatSourceForAnswer(m.source)).filter(Boolean);
+				if(sourceLines.length){
+					finalAnswer += `\n\nSources:\n${sourceLines.join('\n')}`;
+				}else{
+					finalAnswer += `\n\nSources: Not available.`;
+				}
+			}
+			finalAnswer += `\n\n${DISCLAIMER_TEXT}`;
+			lastBot[lastBot.length-1].textContent = finalAnswer;
+			await api('/api/chats/append','POST',{id:currentChatId,role:'bot',text: finalAnswer,tag:mode==='online'?'online':'textbook'});
+		}
+		if(rag.matches && rag.matches.length){
+			overlayContent.innerHTML = rag.matches.map(m=>{
+				const snippet = m.text ? `<div>${m.text}</div>` : '';
+				return `<div style='margin-bottom:8px'><div style='color:#9bb0d3;font-size:12px'>${m.source||'Source'}</div>${snippet}</div>`;
+			}).join('');
+			overlay.hidden=false;
+		}
 		await loadChats();
-	}catch(e){ const lastBot = messages.querySelectorAll('.msg.bot'); if(lastBot.length){ lastBot[lastBot.length-1].textContent='Error. Try again.'; }}
+	}catch(e){ const lastBot = messages.querySelectorAll('.msg.bot'); if(lastBot.length){ lastBot[lastBot.length-1].textContent=`Error. Try again.\n\n${DISCLAIMER_TEXT}`; }}
 }
 
 send.onclick = sendQuery; query.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendQuery(); }});
@@ -140,8 +221,10 @@ function updateWelcomeEmptyState(){
 	const filtered = chatList.filter(c=>c.tag===(mode==='online'?'online':'textbook'));
 	if (filtered.length === 0 && messages && messages.children.length===0) {
 		empty && (empty.style.display = 'flex');
+		messages && messages.classList.add('hidden');
 	} else {
 		empty && (empty.style.display = 'none');
+		messages && messages.classList.remove('hidden');
 	}
 }
 // Patch renderList to trigger welcome update
@@ -168,3 +251,11 @@ if(clearChatsBtn){
 		updateWelcomeEmptyState();
 	};
 }
+
+suggestions.forEach(btn=>{
+	btn.addEventListener('click',()=>{
+		const text = btn.dataset.query || btn.textContent;
+		query.value = text.trim();
+		sendQuery();
+	});
+});

@@ -38,14 +38,32 @@ def online_search():
         answer = None
         sources = []
         if "choices" in jr and jr['choices']:
-            answer = jr['choices'][0]['message']['content']
-            # Extract [n]: links
-            lines = answer.split("\n")
-            for line in lines:
+            choice = jr['choices'][0]
+            answer = choice['message']['content']
+            metadata = choice.get('metadata') or {}
+            citations = metadata.get('citations') or jr.get('citations') or []
+            for cite in citations:
+                if isinstance(cite, str):
+                    url = cite
+                    title = ''
+                else:
+                    url = cite.get('url') or cite.get('source') or cite.get('link')
+                    title = cite.get('title') or cite.get('text') or cite.get('snippet') or ''
+                if not url:
+                    continue
+                sources.append({'source': url, 'text': title})
+            # Fallback: scrape numbered references from the answer body
+            if not sources and answer:
                 import re
-                m = re.search(r'\[(\d+)]:?\s*(https?://\S+)', line)
-                if m:
-                    sources.append({'source': m.group(2), 'text': ''})
+                lines = answer.split("\n")
+                seen = set()
+                for line in lines:
+                    m = re.search(r'\[(\d+)]:?\s*(https?://\S+)', line)
+                    if m:
+                        url = m.group(2)
+                        if url not in seen:
+                            sources.append({'source': url, 'text': ''})
+                            seen.add(url)
         return {"answer": answer, "matches": sources}
     except Exception as e:
         return {"answer": f"There was an error contacting the web API: {e}", "matches": []}
