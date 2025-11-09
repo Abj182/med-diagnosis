@@ -116,7 +116,17 @@ function createMsgEl(text, who){
 function addMsg(text, who){
 	const el = createMsgEl(text, who);
 	messages.appendChild(el);
-	messages.scrollTop = messages.scrollHeight;
+	scrollToBottom();
+}
+
+function scrollToBottom(){
+	const mainBody = document.querySelector('.main-body');
+	if(mainBody){
+		// Use requestAnimationFrame to ensure layout is updated
+		requestAnimationFrame(() => {
+			mainBody.scrollTop = mainBody.scrollHeight;
+		});
+	}
 }
 
 messages.addEventListener('click',(e)=>{
@@ -159,7 +169,7 @@ function formatSourceForAnswer(src){
 
 async function loadChats(){ const res = await api('/api/chats/list'); chatList = res.chats||[]; renderList(); }
 
-async function openChat(id){ const res = await api(`/api/chats/get?id=${encodeURIComponent(id)}`); if(!res.chat) return; currentChatId=res.chat.id; messages.innerHTML=''; for(const m of res.chat.messages){ addMsg(m.text, m.role==='user'?'user':'bot'); } renderList(); }
+async function openChat(id){ const res = await api(`/api/chats/get?id=${encodeURIComponent(id)}`); if(!res.chat) return; currentChatId=res.chat.id; messages.innerHTML=''; for(const m of res.chat.messages){ addMsg(m.text, m.role==='user'?'user':'bot'); } renderList(); scrollToBottom(); }
 
 async function createChat(){ const res = await api('/api/chats/create','POST',{title:'New Chat',tag: mode==='online'?'online':'textbook'}); currentChatId=res.id; renderList(); messages.innerHTML=''; }
 
