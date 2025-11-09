@@ -7,7 +7,11 @@
 	<link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
-	<div class="container" style="min-height:100vh; display:grid; place-items:center;">
+	<div class="container" style="min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px;">
+		<div style="text-align:center; margin-bottom:12px;">
+			<h1 style="font-size:28px; font-weight:700; color:var(--text); margin:0 0 8px 0;">Welcome to Medical Diagnosis Chatbot</h1>
+			<p style="color:var(--muted); font-size:16px; margin:0;">Your AI-powered medical assistant</p>
+		</div>
 		<div class="card" style="width:460px; max-width:100%;">
 			<h2 class="title">Create your account</h2>
 			<p class="sub">Register to start using your medical assistant</p>
@@ -24,15 +28,76 @@
 		const r = await fetch(path,{method,headers:{'Content-Type':'application/json'},body: body?JSON.stringify(body):undefined});
 		return r.json();
 	}
-	document.getElementById('register').onclick = async()=>{
-		const email = document.getElementById('email').value.trim();
-		const password = document.getElementById('password').value;
-		const res = await api('/api/auth/register','POST',{email,password});
-		if(res.error){ alert(res.error); return; }
-		const login = await api('/api/auth/login','POST',{email,password});
-		if(login.access_token){ localStorage.setItem('medassist_token',login.access_token); localStorage.setItem('medassist_user',JSON.stringify(login.user)); location.href='/home'; }
-		else location.href='/login';
-	};
+	
+	async function handleRegister(){
+		const emailInput = document.getElementById('email');
+		const passwordInput = document.getElementById('password');
+		const registerBtn = document.getElementById('register');
+		
+		const email = emailInput.value.trim();
+		const password = passwordInput.value;
+		
+		if(!email || !password){
+			alert('Please enter both email and password');
+			return;
+		}
+		
+		// Disable inputs and button, show loading message
+		emailInput.disabled = true;
+		passwordInput.disabled = true;
+		registerBtn.disabled = true;
+		const originalText = registerBtn.textContent;
+		registerBtn.textContent = 'Registering please wait...';
+		
+		try{
+			const res = await api('/api/auth/register','POST',{email,password});
+			if(res.error){ 
+				alert(res.error); 
+				// Re-enable inputs and button
+				emailInput.disabled = false;
+				passwordInput.disabled = false;
+				registerBtn.disabled = false;
+				registerBtn.textContent = originalText;
+				return; 
+			}
+			
+			// Update button text for login phase
+			registerBtn.textContent = 'Logging in please wait...';
+			
+			const login = await api('/api/auth/login','POST',{email,password});
+			if(login.access_token){ 
+				localStorage.setItem('medassist_token',login.access_token); 
+				localStorage.setItem('medassist_user',JSON.stringify(login.user)); 
+				location.href='/home'; 
+			}
+			else{
+				location.href='/login';
+			}
+		}catch(error){
+			alert('An error occurred. Please try again.');
+			// Re-enable inputs and button
+			emailInput.disabled = false;
+			passwordInput.disabled = false;
+			registerBtn.disabled = false;
+			registerBtn.textContent = originalText;
+		}
+	}
+	
+	document.getElementById('register').onclick = handleRegister;
+	
+	// Add Enter key support
+	document.getElementById('email').addEventListener('keydown', (e) => {
+		if(e.key === 'Enter'){
+			document.getElementById('password').focus();
+		}
+	});
+	
+	document.getElementById('password').addEventListener('keydown', (e) => {
+		if(e.key === 'Enter'){
+			e.preventDefault();
+			handleRegister();
+		}
+	});
 	</script>
 </body>
 </html>

@@ -7,7 +7,11 @@
 	<link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
-	<div class="container" style="min-height:100vh; display:grid; place-items:center;">
+	<div class="container" style="min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px;">
+		<div style="text-align:center; margin-bottom:12px;">
+			<h1 style="font-size:28px; font-weight:700; color:var(--text); margin:0 0 8px 0;">Welcome to Medical Diagnosis Chatbot</h1>
+			<p style="color:var(--muted); font-size:16px; margin:0;">Your AI-powered medical assistant</p>
+		</div>
 		<div class="card" style="width:420px; max-width:100%;">
 			<h2 class="title">Welcome back</h2>
 			<p class="sub">Sign in to access your chats</p>
@@ -24,13 +28,67 @@
 		const r = await fetch(path,{method,headers:{'Content-Type':'application/json'},body: body?JSON.stringify(body):undefined});
 		return r.json();
 	}
-	document.getElementById('login').onclick = async()=>{
-		const email = document.getElementById('email').value.trim();
-		const password = document.getElementById('password').value;
-		const res = await api('/api/auth/login','POST',{email,password});
-		if(res.access_token){ localStorage.setItem('medassist_token',res.access_token); localStorage.setItem('medassist_user',JSON.stringify(res.user)); location.href='/home'; }
-		else alert(res.error||'Login failed');
-	};
+	
+	async function handleLogin(){
+		const emailInput = document.getElementById('email');
+		const passwordInput = document.getElementById('password');
+		const loginBtn = document.getElementById('login');
+		
+		const email = emailInput.value.trim();
+		const password = passwordInput.value;
+		
+		if(!email || !password){
+			alert('Please enter both email and password');
+			return;
+		}
+		
+		// Disable inputs and button, show loading message
+		emailInput.disabled = true;
+		passwordInput.disabled = true;
+		loginBtn.disabled = true;
+		const originalText = loginBtn.textContent;
+		loginBtn.textContent = 'Logging in please wait...';
+		
+		try{
+			const res = await api('/api/auth/login','POST',{email,password});
+			if(res.access_token){ 
+				localStorage.setItem('medassist_token',res.access_token); 
+				localStorage.setItem('medassist_user',JSON.stringify(res.user)); 
+				location.href='/home'; 
+			}
+			else{
+				alert(res.error||'Login failed');
+				// Re-enable inputs and button
+				emailInput.disabled = false;
+				passwordInput.disabled = false;
+				loginBtn.disabled = false;
+				loginBtn.textContent = originalText;
+			}
+		}catch(error){
+			alert('An error occurred. Please try again.');
+			// Re-enable inputs and button
+			emailInput.disabled = false;
+			passwordInput.disabled = false;
+			loginBtn.disabled = false;
+			loginBtn.textContent = originalText;
+		}
+	}
+	
+	document.getElementById('login').onclick = handleLogin;
+	
+	// Add Enter key support
+	document.getElementById('email').addEventListener('keydown', (e) => {
+		if(e.key === 'Enter'){
+			document.getElementById('password').focus();
+		}
+	});
+	
+	document.getElementById('password').addEventListener('keydown', (e) => {
+		if(e.key === 'Enter'){
+			e.preventDefault();
+			handleLogin();
+		}
+	});
 	</script>
 </body>
 </html>

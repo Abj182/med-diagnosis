@@ -72,9 +72,8 @@ function setMode(m){
 	messages.innerHTML = '';
 	query.value = '';
 	loadChats().then(()=>{
-		// open recent chat for the mode if any
-		const filtered = chatList.filter(c=>c.tag===(mode==='online'?'online':'textbook'));
-		if(filtered.length) openChat(filtered[0].id);
+		// Don't open previous chat, show welcome screen instead
+		updateWelcomeEmptyState();
 	});
 	renderList();
 }
@@ -220,16 +219,19 @@ if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){ const 
 voice.onclick=()=>{ if(!recognition){ alert('Voice input not supported in this browser.'); return; } try{ if(listening) recognition.stop(); else recognition.start(); }catch(_){} };
 
 // Initial boot - don't call setMode here (it could overwrite)
-(async function init(){ await loadChats();
-	const filtered = chatList.filter(c=>c.tag===(mode==='online'?'online':'textbook'));
-	if(filtered.length) openChat(filtered[0].id); })();
+(async function init(){ 
+	await loadChats();
+	// Don't open previous chat, show welcome screen instead
+	updateWelcomeEmptyState();
+})();
 
 // main-empty/welcome view logic and clear chat handler
 function updateWelcomeEmptyState(){
 	const empty = document.getElementById('main-empty');
 	const messages = document.getElementById('messages');
-	const filtered = chatList.filter(c=>c.tag===(mode==='online'?'online':'textbook'));
-	if (filtered.length === 0 && messages && messages.children.length===0) {
+	// Show welcome screen when there are no messages displayed
+	// This happens when: new login, mode switch, new chat, or no active chat
+	if (messages && messages.children.length === 0) {
 		empty && (empty.style.display = 'flex');
 		messages && messages.classList.add('hidden');
 	} else {
