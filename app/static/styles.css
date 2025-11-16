@@ -27,7 +27,7 @@ body{ margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,
 .sidebar .btn{ width:100%; }
 .sidebar-header{ display:flex; align-items:center; justify-content:space-between; color:#dde7ff; font-weight:600; }
 .sidebar-title{ font-size:16px; }
-.sidebar-menu{ background:#1c2542; border:1px solid var(--border); color:#9fb7ff; width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+	.sidebar-menu{ background:#1c2542; border:1px solid var(--border); color:#9fb7ff; width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px; }
 .sidebar-primary{ display:flex; align-items:center; justify-content:center; gap:10px; font-weight:600; letter-spacing:.1px; }
 .sidebar-filters{ display:flex; flex-direction:column; gap:8px; }
 .filter-btn{ border:none; background:#141c33; color:#9fb7ff; padding:10px 12px; border-radius:10px; text-align:left; font-weight:600; cursor:pointer; transition:background .18s ease, color .18s ease; }
@@ -69,6 +69,24 @@ body{ margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,
 .overlay .content{ max-height:240px; overflow:auto; font-size:13px; color:#dfe7ff; }
 .toggle{ position:fixed; right:22px; bottom:22px; width:44px; height:44px; border-radius:10px; border:1px solid var(--border); background:#0a1428; color:#cde; display:flex; align-items:center; justify-content:center; }
 
+/* Sidebar backdrop overlay */
+.sidebar-backdrop{
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0,0,0,0.5);
+	z-index: 999;
+}
+@media (max-width: 960px){
+	.sidebar.open ~ .sidebar-backdrop,
+	.sidebar-backdrop.active{
+		display: block;
+	}
+}
+
 /* Utility */
 .center{ display:flex; align-items:center; justify-content:center; }
 .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
@@ -85,12 +103,197 @@ body{ margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,
 .mode-btn { background: #1d2640; border: none; color: #b6cff9; border-radius: 8px; font-weight:600; box-shadow:none; }
 .mode-btn:focus{ outline:2px solid var(--accent); }
 
-@media (max-width: 960px){ .shell{ grid-template-columns: 1fr; } .sidebar{ position:relative; z-index:2; } }
+/* Mobile Responsive Styles */
+@media (max-width: 960px){ 
+	.shell{ 
+		grid-template-columns: 1fr; 
+		padding: 12px;
+		gap: 12px;
+	} 
+	.sidebar{ 
+		position: fixed;
+		left: -100%;
+		top: 0;
+		width: 280px;
+		height: 100vh;
+		z-index: 1000;
+		transition: left 0.3s ease;
+		border-radius: 0;
+		border-left: none;
+		border-top: none;
+		border-bottom: none;
+		box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+	}
+	.sidebar.open{
+		left: 0;
+	}
+	.main{
+		width: 100%;
+	}
+}
+
 @media (max-width: 720px){
-	.mode-toggle{ width:100%; justify-content:space-between; }
-	.mode-toggle .mode-btn{ flex:1; }
-	.welcome-panel{ margin:24px 16px; padding:28px 20px; }
-	.suggestions{ gap:10px; }
+	/* Header adjustments */
+	.header{
+		padding: 12px 16px;
+	}
+	.brand{
+		font-size: 18px;
+	}
+	.badge{
+		font-size: 11px;
+		padding: 4px 8px;
+	}
+	
+	/* Sidebar menu button - make it more visible on mobile */
+	.sidebar-menu{
+		width: 44px;
+		height: 44px;
+		font-size: 20px;
+	}
+	
+	/* Shell and padding */
+	.shell{
+		padding: 8px;
+		gap: 8px;
+	}
+	
+	/* Main header */
+	.main-header{
+		padding: 12px 16px;
+		flex-wrap: wrap;
+		gap: 12px;
+	}
+	.main-title{
+		font-size: 16px;
+		width: 100%;
+		order: 1;
+	}
+	.mode-toggle{
+		order: 2;
+		width: 100%; 
+		justify-content: space-between; 
+	}
+	.mode-toggle .mode-btn{ 
+		flex: 1; 
+		padding: 6px 12px;
+		font-size: 14px;
+	}
+	
+	/* Welcome panel */
+	.welcome-panel{ 
+		margin: 24px 12px; 
+		padding: 24px 16px; 
+	}
+	.welcome-icon{
+		font-size: 36px;
+	}
+	.welcome-panel h2{
+		font-size: 20px;
+	}
+	.welcome-panel p{
+		font-size: 14px;
+	}
+	.suggestions{ 
+		gap: 8px; 
+	}
+	.suggestion{
+		padding: 10px 14px;
+		font-size: 14px;
+	}
+	
+	/* Messages */
+	.messages{
+		padding: 16px 12px;
+	}
+	.msg{
+		max-width: 85%;
+		padding: 8px 10px;
+		font-size: 14px;
+	}
+	
+	/* Composer */
+	.composer{
+		padding: 12px;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+	.composer .input{
+		font-size: 16px; /* Prevents zoom on iOS */
+		padding: 12px;
+	}
+	.composer-send{
+		min-width: 80px;
+		padding: 12px 16px;
+		font-size: 14px;
+	}
+	.mic{
+		width: 44px;
+		height: 44px;
+		flex-shrink: 0;
+	}
+	
+	/* Footer */
+	.main-footer{
+		padding: 8px 12px;
+		font-size: 11px;
+	}
+	
+	/* Overlay and toggle */
+	.overlay{
+		right: 12px;
+		bottom: 80px;
+		width: calc(100% - 24px);
+		max-width: 360px;
+	}
+	.toggle{
+		right: 12px;
+		bottom: 12px;
+		width: 40px;
+		height: 40px;
+	}
+	
+	/* Controls */
+	.controls{
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+	.controls .mini{
+		font-size: 11px;
+		padding: 5px 8px;
+	}
+}
+
+/* Login/Register page mobile styles */
+@media (max-width: 720px){
+	.container[style*="min-height:100vh"]{
+		padding: 16px;
+	}
+	.container[style*="min-height:100vh"] h1{
+		font-size: 22px !important;
+	}
+	.container[style*="min-height:100vh"] p{
+		font-size: 14px !important;
+	}
+	.card{
+		width: 100% !important;
+		max-width: 100% !important;
+		padding: 20px 16px !important;
+	}
+	.title{
+		font-size: 20px;
+	}
+	.sub{
+		font-size: 13px;
+	}
+	.input{
+		padding: 12px;
+		font-size: 16px; /* Prevents zoom on iOS */
+	}
+	.btn{
+		padding: 12px 16px;
+		font-size: 15px;
+	}
 }
 
 /* Light theme overrides */

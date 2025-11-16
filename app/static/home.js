@@ -16,6 +16,9 @@ const modeOnlineBtn = document.getElementById('mode-online');
 const filterButtons = document.querySelectorAll('.filter-btn');
 const suggestions = document.querySelectorAll('.suggestion');
 const themeToggle = document.getElementById('themeToggle');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebar = document.querySelector('.sidebar');
+const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 
 let chatList = []; let currentChatId = null;
 let mode = localStorage.getItem('ui_chat_mode') || 'textbook';
@@ -271,3 +274,60 @@ suggestions.forEach(btn=>{
 		sendQuery();
 	});
 });
+
+// Sidebar toggle for mobile
+if(sidebarToggle && sidebar){
+	const toggleSidebar = (open) => {
+		if(window.innerWidth <= 960){
+			if(open){
+				sidebar.classList.add('open');
+				if(sidebarBackdrop) sidebarBackdrop.classList.add('active');
+			} else {
+				sidebar.classList.remove('open');
+				if(sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+			}
+		}
+	};
+	
+	sidebarToggle.addEventListener('click', (e)=>{
+		e.stopPropagation();
+		const isOpen = sidebar.classList.contains('open');
+		toggleSidebar(!isOpen);
+	});
+	
+	// Close sidebar when clicking on backdrop
+	if(sidebarBackdrop){
+		sidebarBackdrop.addEventListener('click', ()=>{
+			toggleSidebar(false);
+		});
+	}
+	
+	// Close sidebar when clicking outside on mobile
+	document.addEventListener('click', (e)=>{
+		if(window.innerWidth <= 960){
+			if(sidebar.classList.contains('open') && 
+			   !sidebar.contains(e.target) && 
+			   !sidebarToggle.contains(e.target)){
+				toggleSidebar(false);
+			}
+		}
+	});
+	
+	// Close sidebar when clicking on a chat item on mobile
+	const origOpenChat = openChat;
+	openChat = async function(id){
+		await origOpenChat.apply(this, arguments);
+		if(window.innerWidth <= 960){
+			toggleSidebar(false);
+		}
+	};
+	
+	// Close sidebar when creating new chat on mobile
+	const currentCreateChat = createChat;
+	createChat = async function(){
+		await currentCreateChat.apply(this, arguments);
+		if(window.innerWidth <= 960){
+			toggleSidebar(false);
+		}
+	};
+}
