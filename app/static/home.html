@@ -9,11 +9,15 @@
 <body>
 	<div class="container">
 		<div class="header">
-			<div class="brand">MedAssist</div>
+			<div style="display:flex; align-items:center; gap:12px;">
+				<button id="mobileSidebarToggle" class="mobile-menu-btn" aria-label="Toggle sidebar" style="display:none;">☰</button>
+				<div class="brand">MedAssist</div>
+			</div>
 			<div><span class="badge">Secure</span></div>
 		</div>
 		<div class="shell" id="shell">
 			<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+			<button id="sidebarCollapseToggle" class="sidebar-collapse-toggle" aria-label="Toggle sidebar" style="display:none;">☰</button>
 			<aside class="sidebar">
 					<div class="sidebar-header">
 						<div class="sidebar-title">History</div>
