@@ -172,12 +172,34 @@ function formatSourceForAnswer(src){
 	}
 }
 
+function clearOverlayContext() {
+    overlayContent.innerHTML = '';
+    overlay.setAttribute('hidden', '');
+    overlayToggle.style.display = 'none';
+}
+
 async function loadChats(){ const res = await api('/api/chats/list'); chatList = res.chats||[]; renderList(); }
 
-async function openChat(id){ const res = await api(`/api/chats/get?id=${encodeURIComponent(id)}`); if(!res.chat) return; currentChatId=res.chat.id; messages.innerHTML=''; for(const m of res.chat.messages){ addMsg(m.text, m.role==='user'?'user':'bot'); } renderList(); scrollToBottom(); }
+async function openChat(id){ 
+    const res = await api(`/api/chats/get?id=${encodeURIComponent(id)}`); 
+    if(!res.chat) return; 
+    currentChatId=res.chat.id; 
+    messages.innerHTML=''; 
+    for(const m of res.chat.messages){ 
+        addMsg(m.text, m.role==='user'?'user':'bot'); 
+    } 
+    renderList(); 
+    scrollToBottom();
+    clearOverlayContext(); // Clear context when switching chats
+}
 
-async function createChat(){ const res = await api('/api/chats/create','POST',{title:'New Chat',tag: mode==='online'?'online':'textbook'}); currentChatId=res.id; renderList(); messages.innerHTML=''; }
-
+async function createChat(){ 
+    const res = await api('/api/chats/create','POST',{title:'New Chat',tag: mode==='online'?'online':'textbook'}); 
+    currentChatId=res.id; 
+    renderList(); 
+    messages.innerHTML='';
+    clearOverlayContext(); // Clear context for new chat
+}
 async function sendQuery(){
 	if(!currentChatId) await createChat();
 	const q = query.value.trim(); if(!q) return; query.value=''; addMsg(q,'user'); await api('/api/chats/append','POST',{id:currentChatId,role:'user',text:q,tag:mode==='online'?'online':'textbook'});
@@ -208,7 +230,10 @@ async function sendQuery(){
 				const snippet = m.text ? `<div>${m.text}</div>` : '';
 				return `<div style='margin-bottom:8px'><div style='color:#9bb0d3;font-size:12px'>${m.source||'Source'}</div>${snippet}</div>`;
 			}).join('');
-			overlay.hidden=false;
+			overlay.setAttribute('hidden', '');
+			overlayToggle.style.display = 'flex'; // Show button when context exists
+		} else {
+			clearOverlayContext(); // Hide button when no context
 		}
 		await loadChats();
 	}catch(e){ const lastBot = messages.querySelectorAll('.msg.bot'); if(lastBot.length){ lastBot[lastBot.length-1].textContent=`Error. Try again.\n\n${DISCLAIMER_TEXT}`; }}
@@ -217,7 +242,13 @@ async function sendQuery(){
 send.onclick = sendQuery; query.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendQuery(); }});
 logout.onclick=()=>{ localStorage.clear(); location.href='/login'; };
 newChat.onclick=()=>createChat();
-overlayToggle.onclick=()=>{ overlay.hidden=!overlay.hidden; };
+overlayToggle.onclick=()=>{ 
+    if(overlay.hasAttribute('hidden')){
+        overlay.removeAttribute('hidden');
+    } else {
+        overlay.setAttribute('hidden', '');
+    }
+};
 
 // Voice input via Web Speech API
 let recognition=null, listening=false;

@@ -15,6 +15,13 @@
 			</div>
 			<div><span class="badge">Secure</span></div>
 		</div>
+		<div id="overlay" class="overlay" hidden>
+			<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+				<h5 style="margin: 0;">Context used</h5>
+				<button id="overlayClose" style="background: var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--glass-border); color: var(--text); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px;">×</button>
+			</div>
+			<div id="overlay-content" class="content"></div>
+		</div>
 		<div class="shell" id="shell">
 			<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 			<button id="sidebarCollapseToggle" class="sidebar-collapse-toggle" aria-label="Toggle sidebar" style="display:none;">☰</button>
