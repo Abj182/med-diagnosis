@@ -25,7 +25,7 @@ def online_search():
         payload = {
             "model": "sonar-pro",
             "messages": [
-                {"role": "system", "content": "You are a helpful assistant who returns direct, reliable, concise medical facts with sources from trusted sites like who.int, cdc.gov, medlineplus.gov, nhs.uk, mayo clinic, or research articles; always cite medical source links."},
+                {"role": "system", "content": "You are a highly skilled, kind, and thorough AI doctor. For each user message, answer and then always ask a single medically appropriate, clarifying next question that moves toward a diagnosis or differential. When you have enough information, say 'Assessment complete.' and summarize your findings."},
                 {"role": "user", "content": q},
             ],
             "max_tokens": 512

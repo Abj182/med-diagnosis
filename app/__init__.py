@@ -31,7 +31,7 @@ def create_app() -> Flask:
 
 	@app.get("/")
 	def root():
-		return redirect("/login")
+		return app.send_static_file("landing.html")
 
 	@app.get("/login")
 	def login_page():
@@ -44,6 +44,10 @@ def create_app() -> Flask:
 	@app.get("/home")
 	def home_page():
 		return app.send_static_file("home.html")
+	
+	@app.get("/quick-chat")
+	def quick_chat_page():
+		return app.send_static_file("quick-chat.html")
 
 	@app.get("/api/health")
 	def health():

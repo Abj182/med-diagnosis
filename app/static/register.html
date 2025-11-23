@@ -16,6 +16,7 @@
 			<h2 class="title">Create your account</h2>
 			<p class="sub">Register to start using your medical assistant</p>
 			<div class="form" style="margin-top:12px;">
+				<input id="name" class="input" placeholder="Your Name" />
 				<input id="email" class="input" placeholder="Email" />
 				<input id="password" class="input" type="password" placeholder="Password" />
 				<button id="register" class="btn">Register</button>
@@ -30,15 +31,17 @@
 	}
 	
 	async function handleRegister(){
+		const nameInput = document.getElementById('name');
 		const emailInput = document.getElementById('email');
 		const passwordInput = document.getElementById('password');
 		const registerBtn = document.getElementById('register');
 		
+		const name = nameInput.value.trim();
 		const email = emailInput.value.trim();
 		const password = passwordInput.value;
 		
-		if(!email || !password){
-			alert('Please enter both email and password');
+		if(!name || !email || !password){
+			alert('Please enter your name, email, and password');
 			return;
 		}
 		
@@ -50,7 +53,7 @@
 		registerBtn.textContent = 'Registering please wait...';
 		
 		try{
-			const res = await api('/api/auth/register','POST',{email,password});
+		const res = await api('/api/auth/register','POST',{email,password});
 			if(res.error){ 
 				alert(res.error); 
 				// Re-enable inputs and button
@@ -64,11 +67,12 @@
 			// Update button text for login phase
 			registerBtn.textContent = 'Logging in please wait...';
 			
-			const login = await api('/api/auth/login','POST',{email,password});
+		const login = await api('/api/auth/login','POST',{email,password});
 			if(login.access_token){ 
 				localStorage.setItem('medassist_token',login.access_token); 
 				localStorage.setItem('medassist_user',JSON.stringify(login.user)); 
-				location.href='/home'; 
+				localStorage.setItem('medassist_user_name', name); 
+				location.href='/quick-chat'; 
 			}
 			else{
 				location.href='/login';
@@ -85,12 +89,17 @@
 	
 	document.getElementById('register').onclick = handleRegister;
 	
-	// Add Enter key support
-	document.getElementById('email').addEventListener('keydown', (e) => {
-		if(e.key === 'Enter'){
-			document.getElementById('password').focus();
-		}
-	});
+		// Add Enter key support
+		document.getElementById('name').addEventListener('keydown', (e) => {
+			if(e.key === 'Enter'){
+				document.getElementById('email').focus();
+			}
+		});
+		document.getElementById('email').addEventListener('keydown', (e) => {
+			if(e.key === 'Enter'){
+				document.getElementById('password').focus();
+			}
+		});
 	
 	document.getElementById('password').addEventListener('keydown', (e) => {
 		if(e.key === 'Enter'){

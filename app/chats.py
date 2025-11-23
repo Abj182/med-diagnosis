@@ -110,3 +110,29 @@ def clear_all():
 	sb = get_supabase()
 	sb.table(TABLE).delete().eq("user_id", _uid()).execute()
 	return {"ok": True}
+
+
+@chats_bp.get("/report")
+@jwt_required()
+def get_report():
+    """Generate a summary report for a chat session."""
+    from .summarize import summarize_segments
+    sb = get_supabase()
+    sid = request.args.get("id")
+    if not sid:
+        return {"error": "id required"}, 400
+    res = sb.table(TABLE).select("role,content,timestamp").eq("user_id", _uid()).eq("session_id", sid).order("timestamp", desc=False).execute()
+    rows = res.data or []
+    qas = []
+    segments = []
+    last_user = None
+    for r in rows:
+        if r['role'] == 'user':
+            last_user = r['content']
+        elif r['role'] in ('bot','assistant') and last_user:
+            qas.append({"question": last_user, "answer": r['content']})
+            segments.append(f"Q: {last_user}\nA: {r['content']}")
+            last_user = None
+    context = "\n".join(segments)
+    summary = summarize_segments("Summarize the chat and provide potential next medical steps based on user answers:", segments) if segments else "No summary available."
+    return {"qas": qas, "summary": summary, "session_id": sid}

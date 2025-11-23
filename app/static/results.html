@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Assessment Results • MediMirror</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <style>
+    body { overflow-y: auto; height: 100vh; }
+    .results-container { max-width: 600px; margin: 48px auto; background: var(--glass); border-radius: 14px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); padding: 32px 24px; border: 1px solid var(--glass-border); min-height: calc(100vh - 96px); }
+    .results-title { font-size: 2em; margin-bottom: 16px; color: var(--text); }
+    .results-summary { background: var(--panel-2); border-radius: 8px; color: var(--text); padding: 12px 18px; margin-bottom: 22px; border: 1px solid var(--glass-border); }
+    .qa { margin-bottom: 18px; color: var(--text); }
+    .q { font-weight: bold; color: var(--text); }
+    .a { margin: 2px 0 0 14px; color: var(--muted); }
+    .results-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+    .previous-results { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border); }
+    .previous-results h3 { font-size: 1.2em; margin-bottom: 16px; color: var(--text); }
+    .previous-chat-item { background: var(--panel-2); border: 1px solid var(--glass-border); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .previous-chat-item:hover { background: rgba(102, 126, 234, 0.15); border-color: var(--accent); }
+    .previous-chat-item .chat-title { font-weight: 500; color: var(--text); margin-bottom: 4px; }
+    .previous-chat-item .chat-date { font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="results-container">
+    <div class="results-title">Your Assessment Report</div>
+    <div id="summary" class="results-summary"></div>
+    <div id="qas"></div>
+    <div class="results-actions">
+      <button class="btn" id="backToChatBtn" style="display:inline-block;cursor:pointer;pointer-events:auto;position:relative;z-index:10;">Back to Chat</button>
+      <button class="btn" id="exportPdfBtn" style="display:inline-block;cursor:pointer;pointer-events:auto;position:relative;z-index:10;background:linear-gradient(135deg, #00d4ff 0%, #667eea 100%);border:none;color:#0a0e1a;font-weight:600;">📄 Export PDF</button>
+    </div>
+    <div id="previousResults" class="previous-results" style="display:none;">
+      <h3>Previous Results</h3>
+      <div id="previousResultsList"></div>
+    </div>
+  </div>
+  <script>
+    // Check authentication
+    const token = localStorage.getItem('medassist_token');
+    if(!token){ location.href='/login'; }
+    // Get session id from URL
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+    const sessionId = getParam('id');
+    if(!sessionId){ document.getElementById('summary').textContent = 'No session ID provided.'; throw new Error('No session id'); }
+    let reportData = null;
+    let allChats = [];
+    
+    // Load all chats for previous results
+    async function loadPreviousResults() {
+      try {
+        const res = await fetch('/api/chats/list', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        allChats = (data.chats || []).filter(chat => chat.id !== sessionId).slice(0, 5);
+        
+        if(allChats.length > 0) {
+          const previousResultsDiv = document.getElementById('previousResults');
+          const previousResultsList = document.getElementById('previousResultsList');
+          
+          previousResultsDiv.style.display = 'block';
+          previousResultsList.innerHTML = allChats.map(chat => {
+            const date = chat.created_at ? new Date(chat.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown date';
+            return `
+              <div class="previous-chat-item" data-chat-id="${chat.id}">
+                <div class="chat-title">${chat.title || 'Untitled Chat'}</div>
+                <div class="chat-date">${date}</div>
+              </div>
+            `;
+          }).join('');
+          
+          // Attach click handlers
+          previousResultsList.querySelectorAll('.previous-chat-item').forEach(item => {
+            item.onclick = () => {
+              const chatId = item.dataset.chatId;
+              window.location.href = `/static/results.html?id=${encodeURIComponent(chatId)}`;
+            };
+          });
+        }
+      } catch(e) {
+        console.error('Failed to load previous results:', e);
+      }
+    }
+    
+    fetch(`/api/chats/report?id=${encodeURIComponent(sessionId)}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.json()).then(data => {
+      reportData = data;
+      document.getElementById('summary').textContent = data.summary || 'No summary';
+      const qas = data.qas || [];
+      document.getElementById('qas').innerHTML = qas.map(qa => `<div class='qa'><div class='q'>Q: ${qa.question}</div><div class='a'>A: ${qa.answer}</div></div>`).join('');
+      
+      // Load previous results after current report is loaded
+      loadPreviousResults();
+    })
+    .catch(e => {document.getElementById('summary').textContent = 'Failed to load results.'});
+    // After fetching and displaying the report, save the sessionId so quick-chat can use it
+    localStorage.setItem('last_medassist_session', sessionId);
+    
+    // Setup back button - ensure it works reliably
+    (function() {
+      const backBtn = document.getElementById('backToChatBtn');
+      if(backBtn) {
+        backBtn.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.location.href = '/quick-chat';
+        };
+        backBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.location.href = '/quick-chat';
+        }, true);
+      }
+      
+      // Setup PDF export button
+      const exportBtn = document.getElementById('exportPdfBtn');
+      if(exportBtn) {
+        exportBtn.style.pointerEvents = 'auto';
+        exportBtn.style.cursor = 'pointer';
+        exportBtn.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          exportToPDF();
+        };
+        exportBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          exportToPDF();
+        }, true);
+      }
+    })();
+    
+    function exportToPDF() {
+      const userName = localStorage.getItem('medassist_user_name') || 'User';
+      const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const summary = document.getElementById('summary').textContent;
+      const qas = Array.from(document.querySelectorAll('.qa')).map(qa => {
+        const q = qa.querySelector('.q').textContent.replace('Q: ', '');
+        const a = qa.querySelector('.a').textContent.replace('A: ', '');
+        return {q, a};
+      });
+      
+      // Create PDF content
+      let pdfContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Medical Assessment Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
+            h1 { color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+            .header { margin-bottom: 30px; }
+            .header p { margin: 5px 0; color: #666; }
+            .summary { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .qa { margin: 20px 0; padding: 15px; border-left: 3px solid #667eea; }
+            .q { font-weight: bold; color: #333; margin-bottom: 10px; }
+            .a { color: #666; line-height: 1.6; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Medical Assessment Report</h1>
+            <p><strong>Patient Name:</strong> ${userName}</p>
+            <p><strong>Date:</strong> ${date}</p>
+          </div>
+          <div class="summary">
+            <h2>Summary</h2>
+            <p>${summary}</p>
+          </div>
+          <div>
+            <h2>Questions & Answers</h2>
+            ${qas.map(qa => `
+              <div class="qa">
+                <div class="q">Q: ${qa.q}</div>
+                <div class="a">A: ${qa.a}</div>
+              </div>
+            `).join('')}
+          </div>
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #999;">
+            <p>This report is generated for educational purposes only. Always consult a qualified healthcare provider for personalized medical advice.</p>
+          </div>
+        </body>
+        </html>
+      `;
+      
+      // Open in new window and print
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(pdfContent);
+      printWindow.document.close();
+      
+      // Wait for content to load, then trigger print
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+    }
+  </script>
+</body>
+</html>

@@ -50,3 +50,19 @@ def me():
 		return {"error": "user not found"}, 404
 	user = res.data[0]
 	return {"user": {"id": user.get("id"), "email": user.get("email"), "created_at": user.get("created_at")}}
+
+@auth_bp.delete("/delete")
+@jwt_required()
+def delete_account():
+	"""Delete user account and all their chats"""
+	uid = int(get_jwt_identity())
+	sb = get_supabase()
+	
+	# Delete all chats for this user
+	from .chats import TABLE
+	sb.table(TABLE).delete().eq("user_id", uid).execute()
+	
+	# Delete the user account
+	sb.table("users").delete().eq("id", uid).execute()
+	
+	return {"ok": True, "message": "Account and all chats deleted successfully"}

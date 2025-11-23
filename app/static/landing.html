@@ -13,8 +13,8 @@
 			<span class="brand-text">MediMirror</span>
 		</div>
 		<div class="nav-links">
-			<a href="/home" class="nav-link active">Home</a>
-			<a href="/quick-chat" id="quickChatLink" class="nav-link">Quick Chat</a>
+			<a href="/home" class="nav-link">Home</a>
+			<a href="/quick-chat" class="nav-link">Quick Chat</a>
 			<button id="resultsBtnNav" class="nav-link" style="display:none;background:none;border:none;cursor:pointer;color:inherit;font-size:inherit;padding:inherit;">📊 Results</button>
 		</div>
 		<div id="authButtons" style="display:flex;gap:12px;align-items:center;">
@@ -68,7 +68,6 @@
 		</div>
 	</section>
 	
-	<button id="resultsBtn" class="btn sidebar-danger" style="display:none;margin-top:14px;">View Results</button>
 	<script>
 		// Check if user is logged in
 		const token = localStorage.getItem('medassist_token');
@@ -102,50 +101,34 @@
 				};
 			}
 			
-			// Ensure Quick Chat link is visible and functional
-			const quickChatLink = document.getElementById('quickChatLink');
-			if(quickChatLink){
-				quickChatLink.style.display = 'inline-block';
-			}
+			// User is logged in, show quick chat link
+			document.querySelectorAll('a[href="/quick-chat"]').forEach(link => {
+				link.style.display = 'inline-block';
+			});
 		} else {
 			// User not logged in - show login/register buttons
 			if(authButtons) authButtons.style.display = 'flex';
 			if(userGreeting) userGreeting.style.display = 'none';
 		}
-
-		const resultsBtn = document.getElementById('resultsBtn');
-		const resultsBtnNav = document.getElementById('resultsBtnNav');
 		
-		function updateResultsBtnHome(){
+		// Results button functionality
+		const resultsBtnNav = document.getElementById('resultsBtnNav');
+		function updateResultsBtnLanding(){
 			try{
 				const lastSession = localStorage.getItem('last_medassist_session');
-				const chatId = window.currentChatId || lastSession;
-				
-				if(chatId){
-					if(resultsBtn){
-						resultsBtn.style.display = 'inline-block';
-						resultsBtn.onclick = ()=>{
-							window.location.href = `/static/results.html?id=${encodeURIComponent(chatId)}`;
-						};
-					}
-					if(resultsBtnNav){
-						resultsBtnNav.style.display = 'inline-block';
-						resultsBtnNav.onclick = ()=>{
-							window.location.href = `/static/results.html?id=${encodeURIComponent(chatId)}`;
-						};
-					}
-				} else {
-					if(resultsBtn){
-						resultsBtn.style.display = 'none';
-					}
-					if(resultsBtnNav){
-						resultsBtnNav.style.display = 'none';
-					}
+				if(lastSession && resultsBtnNav){
+					resultsBtnNav.style.display = 'inline-block';
+					resultsBtnNav.onclick = ()=>{
+						window.location.href = `/static/results.html?id=${encodeURIComponent(lastSession)}`;
+					};
+				} else if(resultsBtnNav){
+					resultsBtnNav.style.display = 'none';
 				}
 			}catch(e){}
 		}
-		window.updateResultsBtnHome = updateResultsBtnHome;
-		setInterval(updateResultsBtnHome, 1200);
+		updateResultsBtnLanding();
+		setInterval(updateResultsBtnLanding, 1200);
 	</script>
 </body>
 </html>
+

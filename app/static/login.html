@@ -50,11 +50,11 @@
 		loginBtn.textContent = 'Logging in please wait...';
 		
 		try{
-			const res = await api('/api/auth/login','POST',{email,password});
+		const res = await api('/api/auth/login','POST',{email,password});
 			if(res.access_token){ 
 				localStorage.setItem('medassist_token',res.access_token); 
 				localStorage.setItem('medassist_user',JSON.stringify(res.user)); 
-				location.href='/home'; 
+				location.href='/quick-chat'; 
 			}
 			else{
 				alert(res.error||'Login failed');

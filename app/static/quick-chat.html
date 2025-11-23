@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Quick Chat • MediMirror</title>
+	<link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+	<div class="container">
+		<div class="header">
+			<div style="display:flex; align-items:center; gap:12px;">
+				<button id="mobileSidebarToggle" class="mobile-menu-btn" aria-label="Toggle sidebar" style="display:none;">☰</button>
+				<div class="brand">MediMirror</div>
+			</div>
+			<div style="display:flex; align-items:center; gap:12px;">
+				<a href="/home" class="nav-link-header" style="text-decoration:none; color:var(--text);">Home</a>
+				<span class="badge">Secure</span>
+			</div>
+		</div>
+		<div class="shell" id="shell">
+			<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+			<button id="sidebarCollapseToggle" class="sidebar-collapse-toggle" aria-label="Toggle sidebar" style="display:none;">☰</button>
+			<aside class="sidebar">
+					<div class="sidebar-header">
+						<div class="sidebar-title">History</div>
+						<button id="sidebarToggle" class="sidebar-menu" aria-label="Toggle sidebar">☰</button>
+					</div>
+					<button id="newChat" class="btn sidebar-primary"><span>✨</span> New Chat</button>
+					<div class="sidebar-filters">
+						<button class="filter-btn active" data-filter="all">All Chats</button>
+						<button class="filter-btn" data-filter="textbook">Textbook</button>
+						<button class="filter-btn" data-filter="online">Advanced</button>
+					</div>
+					<div id="recents" class="list"></div>
+					<div class="sidebar-footer">
+						<button id="clearChats" class="btn sidebar-danger">⚠ Clear Chats</button>
+						<button id="themeToggle" class="btn sidebar-muted">🌙 Light Mode</button>
+						<button id="deleteAccount" class="btn sidebar-danger" style="margin-top:8px;">🗑️ Delete Account</button>
+						<button id="logout" class="btn sidebar-muted">🚪 Logout</button>
+					</div>
+			</aside>
+			<section class="main">
+					<header class="main-header">
+						<div class="main-title">Medical Diagnosis Chatbot</div>
+						<div class="mode-toggle">
+							<button id="mode-textbook" class="mode-btn active">Textbook</button>
+							<button id="mode-online" class="mode-btn">Advanced</button>
+						</div>
+					</header>
+					<div class="main-body">
+						<div id="main-empty" class="welcome-panel">
+							<div class="welcome-icon">🏥</div>
+							<h2>Welcome to Medical Assistant</h2>
+							<p>I can help you understand symptoms and provide information from medical textbooks.</p>
+							<div class="suggestions">
+							<button class="suggestion" data-query="I have a fever and headache">🤒 I have a fever and headache</button>
+							<button class="suggestion" data-query="Symptoms of diabetes">🩺 Symptoms of diabetes</button>
+							<button class="suggestion" data-query="Treating common cold">💊 Treating common cold</button>
+							</div>
+						</div>
+						<div id="messages" class="messages"></div>
+					</div>
+					<div style="text-align:right;margin-top:12px;">
+						<button id="resultsBtn" class="btn sidebar-danger" style="display:none;">View Results</button>
+					</div>
+					<div class="composer">
+						<button id="voice" class="mic" title="Voice input">🎤</button>
+						<input id="query" class="input" placeholder="Ask me anything about health..." />
+						<button id="send" class="btn composer-send">Send</button>
+					</div>
+					<footer class="main-footer">Medical information is for educational purposes only. Always consult a healthcare professional.</footer>
+			</section>
+		</div>
+	</div>
+	<div id="overlay" class="overlay" hidden>
+		<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+			<h5 style="margin: 0;">Context used</h5>
+			<button id="overlayClose" style="background: var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--glass-border); color: var(--text); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px;">×</button>
+		</div>
+		<div id="overlay-content" class="content"></div>
+	</div>
+	<button id="overlayToggle" class="toggle">⧉</button>
+	<script src="/static/home.js"></script>
+	<script>
+		// Allow access even without authentication - show warning message
+		const token = localStorage.getItem('medassist_token');
+		if(!token){
+			// Show warning message for unauthenticated users
+			const warningDiv = document.createElement('div');
+			warningDiv.style.cssText = 'background:rgba(255,193,7,0.15);border:1px solid rgba(255,193,7,0.3);color:var(--text);padding:12px 16px;border-radius:8px;margin:16px 24px;text-align:center;font-size:14px;';
+			warningDiv.innerHTML = '⚠️ <strong>Note:</strong> Your previous chats will not be visible. <a href="/login" style="color:#00d4ff;text-decoration:underline;margin-left:8px;">Login</a> or <a href="/register" style="color:#00d4ff;text-decoration:underline;">Register</a> to save your chat history.';
+			const mainBody = document.querySelector('.main-body');
+			if(mainBody) {
+				mainBody.insertBefore(warningDiv, mainBody.firstChild);
+			}
+		}
+		const resultsBtn = document.getElementById('resultsBtn');
+		function updateResultsBtn(){
+			if(window.currentChatId && resultsBtn){
+				resultsBtn.style.display = 'inline-block';
+				resultsBtn.onclick = ()=>{
+					window.location.href = `/static/results.html?id=${encodeURIComponent(window.currentChatId)}`;
+				};
+			} else if(resultsBtn) {
+				resultsBtn.style.display = 'none';
+			}
+		}
+		window.updateResultsBtn = updateResultsBtn;
+		// Update immediately after openChat/createChat
+		const oldOpenChat = window.openChat;
+		window.openChat = async function(){
+			await oldOpenChat.apply(this, arguments);
+			updateResultsBtn();
+		}
+		const oldCreateChat = window.createChat;
+		window.createChat = async function(){
+			await oldCreateChat.apply(this, arguments);
+			updateResultsBtn();
+		}
+		setInterval(updateResultsBtn, 1200); // fallback
+	</script>
+</body>
+</html>
+
